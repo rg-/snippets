@@ -1,0 +1,180 @@
+/*
+
+	WPCF7 addons 
+
+	TODO: merge all other theme settings and configs, like C:\xampp\htdocs\_www\bootclean-v8\_html\wp-content\themes\bootclean\bc\core\admin\admin_dashboard_widget.php,
+	
+	For example, maybe those kind of things should be passed trough a filter, so i can use that filter here to add things and all from this wp-cf7.php file.
+	
+	- Filter also enable/disable each one of these addons and add them into the Hooks admin section (same as above?)
+	
+*/
+
+
+if( defined('WPCF7_VERSION') ){
+	
+	/*
+	
+		WPBC_recaptcha
+		
+			Hide till email is filled, add a new field like this one:
+		
+				[recaptcha callback:WPBC_recaptcha_enable_submit expired-callback:WPBC_recaptcha_disable_submit]
+			
+			That´s all, optional callback once form sends using Additional Settings field:
+			
+				on_sent_ok: "WPBC_recaptcha_OK_submit();"
+	
+	*/
+	
+	
+	// Enable shortcodes into form editor and wrap form if recaptcha used
+	add_filter( 'wpcf7_form_elements', 'WPBC_CF7'.'__'.'wpcf7_form_elements' ); 
+	function WPBC_CF7__wpcf7_form_elements( $form ) {  
+		// IMPORTANT, notice how all start here, since i detect the WPBC_recaptcha_enable_submit callback on tag and then i wrapp all the form content into a new div, this is actualy the div referenced on js scripts above
+		if( strpos( $form, 'recaptcha' ) !== false && strpos( $form, 'WPBC_recaptcha_enable_submit' ) ) {
+			$form = '<div class="WPBC_CF7__recaptcha">'.$form.'</div>';
+		}	
+		$form = do_shortcode( $form ); 
+					
+		return $form;
+	};
+
+	add_filter( 'wpcf7_form_tag', 'WPBC_CF7'.'__'.'wpcf7_form_tag', 10, 2);	
+	function WPBC_CF7__wpcf7_form_tag( $tag, $unused ) {  
+		if($tag['type']=='recaptcha'){
+			 
+		}
+		return $tag;
+	};
+	
+	function WPBC_CF7__wp_footer(){  
+		 if ( wp_script_is( 'contact-form-7', 'enqueued' ) && wp_script_is( 'jquery', 'enqueued' ) ) {
+			?>
+			<script>
+				// Used on Form content like: [recaptcha callback:WPBC_recaptcha_enable_submit expired-callback:WPBC_recaptcha_disable_submit]
+				function WPBC_recaptcha_enable_submit(response){
+					if(response==''){
+						
+					}else{
+						var form = document.getElementsByClassName("recaptcha_current_form");
+						form[0].classList.remove("recaptcha_current_form");
+						
+						var recaptcha = document.getElementsByClassName("_recaptcha_current");
+						//grecaptcha.reset();
+						//recaptcha[0].classList.remove("_recaptcha_current");
+						
+						var submit = document.getElementsByClassName("recaptcha_current");
+						submit[0].removeAttribute("disabled");  
+						submit[0].title = "Great, you can now submit the form.";
+					}
+					
+				}
+				function WPBC_recaptcha_disable_submit(){
+					var submit = document.getElementsByClassName("recaptcha_current");
+					submit[0].disabled = true; 
+					submit[0].title = '';
+				}
+				// Use on Additional Settings, like on_sent_ok: "WPBC_recaptcha_OK_submit();"
+				function WPBC_recaptcha_OK_submit(){ 
+					var recaptcha = document.getElementsByClassName("_recaptcha_current");
+					grecaptcha.reset();
+					recaptcha[0].classList.remove("_recaptcha_current");
+					WPBC_recaptcha_disable_submit();
+				}
+				
+				function WPBC_isEmail(email) {
+				  var regex = /^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+				  return regex.test(email);
+				}
+				window.addEventListener('DOMContentLoaded', function() {
+					jQuery(document).ready(function(){
+						
+						$ = jQuery;
+						function show_recaptcha(form, el, s){
+							form.addClass( 'recaptcha_current_form' );
+							s.addClass( 'recaptcha_current' ); 
+							s.attr('title','Prove you are not a robot!'); 
+							el.addClass( '_recaptcha_current' );
+						}
+						function hide_recaptcha(form, el, s){
+							form.removeClass( 'recaptcha_current_form' );
+							s.removeClass( 'recaptcha_current' ); 
+							s.attr('title','Fill up a real email.'); 
+							el.removeClass( '_recaptcha_current' );  
+						}
+						
+						var recaptcha_form = $('.WPBC_CF7__recaptcha').closest('form');
+						
+						recaptcha_form.each(function(){ 
+							var me = $(this);
+							var recaptcha = me.find('.wpcf7-recaptcha');
+							var submit =  me.find('.wpcf7-submit');
+							var input =  me.find('.wpcf7-email');
+							if(recaptcha.length>0){ 
+								submit.attr('disabled','disabled');  
+								hide_recaptcha(me, recaptcha, submit); 
+								input.on('keyup',function() {  
+									if( $(this).val()!='' && WPBC_isEmail($(this).val()) ){ 
+										show = true; 
+									}else{
+										show = false; 
+									}  
+									if(show){
+										show_recaptcha(me, recaptcha, submit);
+									}else{
+										hide_recaptcha(me, recaptcha, submit);
+									}
+								});
+							}
+							
+						});
+						
+					});
+				});
+			</script>
+			<?php
+		 } 
+	}
+	add_action( 'wp_footer', 'WPBC_CF7__wp_footer', 99 );
+	
+	function WPBC_CF7__wp_head(){
+		if ( wp_script_is( 'contact-form-7', 'enqueued' ) && wp_script_is( 'jquery', 'enqueued' ) ) {
+		?>
+		<style>
+			.WPBC_CF7__recaptcha{
+				position:relative;
+			}
+			.recaptcha_current_form .WPBC_CF7__recaptcha:after{
+				 
+			}
+			.WPBC_CF7__recaptcha .wpcf7-recaptcha{
+				position:absolute;
+				top:100%;
+				margin-top:-25px;
+				left:50%;
+				margin-left:-159px;
+				z-index:999;
+				display:none;
+			}
+			.WPBC_CF7__recaptcha .wpcf7-form-control-wrap{
+				position:static;
+			}
+			.WPBC_CF7__recaptcha .wpcf7-submit{
+				
+			}
+				.WPBC_CF7__recaptcha .wpcf7-submit.recaptcha_current{
+					
+				}
+				.WPBC_CF7__recaptcha .wpcf7-recaptcha._recaptcha_current{
+					display:block;
+				}
+		</style>
+		<?php
+		}
+	}
+	add_action( 'wp_head', 'WPBC_CF7__wp_head', 99 );
+	
+	/* WPBC_recaptcha END */
+	
+}
