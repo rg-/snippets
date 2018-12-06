@@ -1,0 +1,13 @@
+$defaults = array(
+			'post'            => '',
+			'length'          => 20,
+			'class'		=> 'entry-summary', 
+			'excerpt_before'	=> '<span class="entry-excerpt">',
+			'excerpt_after'	=> '</span>',
+			'readmore'        => true,
+			'readmore_show_title' => false,
+			'readmore_text'   => esc_html__( 'Read more', 'bootclean' ),
+			'readmore_before'	=> '&hellip; <span class="entry-more">',
+			'readmore_after'  => '</span>',
+			'readmore_class'  => 'more-link'
+);
