@@ -1,0 +1,112 @@
+/*
+
+	Adding custom Builder Rows on Child Themes
+
+*/
+
+/*
+  Optional Reusables (hidden fields)
+*/
+function WPBC_acf_reusables_funnel(){
+	$fields[] = array (
+		'key' => 'field_combo_row_text',
+		'label' => 'Text Field',
+		'name' => 'text_field',
+		'type' => 'text',
+		'instructions' => '',
+		'required' => 0,
+		'conditional_logic' => 0,
+		'wrapper' => array (
+			'width' => '',
+			'class' => '',
+			'id' => '',
+		),
+		'default_value' => 'default',
+		'placeholder' => '',
+		'prepend' => '',
+		'append' => '',
+		'maxlength' => '',
+	);
+	return $fields;
+}
+acf_add_local_field_group(array(
+	'key' => 'group_reusables_funnel',
+	'title' => '#Reusables Funnel',
+	'fields' => WPBC_acf_reusables_funnel(),
+	'location' => array(
+		array(
+			array(
+				'param' => 'post_type',
+				'operator' => '==',
+				'value' => 'post',
+			),
+		),
+	),
+	'menu_order' => 0,
+	'position' => 'normal',
+	'style' => 'default',
+	'label_placement' => 'top',
+	'instruction_placement' => 'label',
+	'hide_on_screen' => '',
+	'active' => 0,
+	'description' => '# Reusable "anywhere" fields, all here.',
+)); 
+
+/* Filter into WPBC_acf_builder_layouts and add the flexible row */
+add_filter('WPBC_acf_builder_layouts', function($layouts){
+
+	$layouts['layout_funnel_colcombo_row'] =  array(
+		'key' => 'layout_funnel_colcombo_row',
+		'name' => 'funnel_colcombo_row',
+		'label' => 'Funnel Columns Combo Row',
+		'display' => 'block',
+		'sub_fields' => array(
+			
+			 array(
+				'key' => 'key__layout_funnel_colcombo_row__content',
+				'label' => 'Content',
+				'name' => 'content',
+				'type' => 'clone',
+				'instructions' => '',
+				'required' => 0,
+				'conditional_logic' => 0,
+				'wrapper' => array(
+					'width' => '',
+					'class' => '',
+					'id' => '',
+				),
+				'clone' => array(
+					0 => 'key__r_tab__content',
+					1 => 'field_combo_row_text',
+					2 => 'key__r_tab__settings',
+					3 => 'key__r_builder_classes_group', 
+				),
+				'display' => 'seamless',
+				'layout' => 'block',
+				'prefix_label' => 0,
+				'prefix_name' => 0,
+			),
+		),
+		'min' => '',
+		'max' => '',
+	);
+
+	return $layouts;
+
+},10,1); 
+
+
+/*
+
+  IMPORTANT
+  
+  Also you need a file "funnel_colcombo_row.php" on [theme]/template-parts/builder/funnel_colcombo_row.php
+  In order to use on front-end and output somethig like:
+  
+  echo get_sub_field('key__layout_funnel_colcombo_row__content_'.'field_combo_row_text', $post_id);
+  
+  Where 'field_combo_row_text' is the cloned field created for this particular flexible row.
+  
+  Use your imagination for the rest.
+
+*/
